@@ -1,0 +1,15 @@
+name: ChunkGuardTestKit
+version: "1.0"
+main: io.github.kuohsuanlo.chunkguard.testkit.ChunkGuardTestKit
+api-version: "1.21"
+load: POSTWORLD
+description: Validation harness that reproduces the low-heap chunk-load-failure condition ChunkGuardAgent guards against.
+commands:
+  heapfill:
+    description: apply a transient, self-releasing heap load for N seconds
+    usage: /heapfill [seconds] [threads] [mbPerAlloc]
+  heaprelease:
+    description: release the retained memory immediately
+  reloadchunk:
+    description: force a fresh chunk load under a fixed heap headroom (validation only)
+    usage: /reloadchunk <cx> <cz> [headroomMB] [world]

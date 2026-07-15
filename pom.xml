@@ -1,0 +1,97 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+
+    <groupId>io.github.kuohsuanlo</groupId>
+    <artifactId>ChunkGuardAgent</artifactId>
+    <version>26.2-1</version>
+    <packaging>jar</packaging>
+    <name>ChunkGuardAgent</name>
+    <description>Refuse to save a load-failed blank chunk over good disk data — a Java agent chunk-corruption write barrier for Paper</description>
+
+    <properties>
+        <!-- Pure JDK + relocated ASM. The whole jar rides the bootstrap classloader, so the
+             instrumented NMS methods can see ChunkGuardRuntime through parent delegation. The
+             runtime reads chunk NBT REFLECTIVELY (java.lang.Object args) — no compile-time NMS
+             dependency, no template step, so the same jar works across many Paper versions. -->
+        <maven.compiler.release>21</maven.compiler.release>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <asm.version>9.10.1</asm.version>
+    </properties>
+
+    <repositories>
+        <repository>
+            <id>central</id>
+            <url>https://repo.maven.apache.org/maven2/</url>
+        </repository>
+    </repositories>
+
+    <dependencies>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-tree</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.ow2.asm</groupId>
+            <artifactId>asm-commons</artifactId>
+            <version>${asm.version}</version>
+        </dependency>
+    </dependencies>
+
+    <build>
+        <finalName>ChunkGuardAgent</finalName>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.1</version>
+                <configuration>
+                    <archive>
+                        <manifestEntries>
+                            <Premain-Class>io.github.kuohsuanlo.chunkguard.ChunkGuardAgentMain</Premain-Class>
+                            <Agent-Class>io.github.kuohsuanlo.chunkguard.ChunkGuardAgentMain</Agent-Class>
+                            <Can-Retransform-Classes>true</Can-Retransform-Classes>
+                            <Can-Redefine-Classes>true</Can-Redefine-Classes>
+                            <Implementation-Title>ChunkGuardAgent</Implementation-Title>
+                            <Implementation-Vendor>廢土貓大 LogoCat (mcfallout.net)</Implementation-Vendor>
+                            <Built-By>LogoCat</Built-By>
+                            <Author>廢土貓大 LogoCat — mcfallout.net</Author>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.6.0</version>
+                <executions>
+                    <execution>
+                        <phase>package</phase>
+                        <goals>
+                            <goal>shade</goal>
+                        </goals>
+                        <configuration>
+                            <createDependencyReducedPom>false</createDependencyReducedPom>
+                            <!-- Relocate ASM: this jar is on the bootstrap (parent-first) classloader
+                                 and must not shadow Paper's / any plugin's org.objectweb.asm. -->
+                            <relocations>
+                                <relocation>
+                                    <pattern>org.objectweb.asm</pattern>
+                                    <shadedPattern>io.github.kuohsuanlo.chunkguard.asm</shadedPattern>
+                                </relocation>
+                            </relocations>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+</project>
