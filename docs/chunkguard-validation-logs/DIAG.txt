@@ -1,0 +1,28 @@
+===== DIAG mode=real hr=40 =====
+-- armed --
+[00:50:08 INFO]: [STDOUT] [io.github.kuohsuanlo.chunkguard.ChunkGuardTransformer] [ChunkGuard] armed: write barrier injected into RegionFileStorage
+-- reloadchunk / cgtest --
+[00:50:10 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] heap free~=38MB (target 40MB); forcing reload of (375,375) ...
+[00:50:13 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] heap recovered: free~=879MB
+[00:50:13 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] holder chunk class=ProtoChunk persistedStatus=minecraft:structure_starts isUnsaved(before)=true
+[00:50:13 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] marked unsaved; isUnsaved(after)=true -> now stop the server
+-- chunk loss --
+[00:50:11 ERROR]: [ca.spottedleaf.moonrise.patches.chunk_system.io.MoonriseRegionFileIO] Failed to read chunk data for task: Task for world: 'minecraft:overworld' at (375,375) type: CHUNK_DATA, hash: 1035425434
+[00:50:11 ERROR]: [ca.spottedleaf.moonrise.patches.chunk_system.scheduling.task.ChunkLoadTask] Failed to load chunk data for task: GenericDataLoadTask{class: ca.spottedleaf.moonrise.patches.chunk_system.scheduling.task.ChunkLoadTask$ChunkDataLoadTask, world: minecraft:overworld, chunk: (375,375), hashcode: 1944298048, priority: BLOCKING, type: CHUNK_DATA}, chunk data will be lost
+-- ChunkGuard verdicts/errors --
+[00:50:15 INFO]: [STDOUT] [io.github.kuohsuanlo.chunkguard.ChunkGuardRuntime] [ChunkGuard] BLOCKED corrupting write [moonrise] (kept good disk data) chunk(375,375) incoming=structure_starts disk=exists(failsafe)
+-- ChunkGuard counters (all) --
+===== DIAG mode=real hr=40 =====
+-- armed --
+[00:54:07 INFO]: [STDOUT] [io.github.kuohsuanlo.chunkguard.ChunkGuardTransformer] [ChunkGuard] armed: write barrier injected into RegionFileStorage
+-- reloadchunk / cgtest --
+[00:54:09 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] heap free~=38MB (target 40MB); forcing reload of (375,375) ...
+[00:54:13 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] heap recovered: free~=879MB
+[00:54:13 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] holder chunk class=ProtoChunk persistedStatus=minecraft:structure_starts isUnsaved(before)=true
+[00:54:13 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] marked unsaved; isUnsaved(after)=true -> now stop the server
+-- chunk loss --
+[00:54:12 ERROR]: [ca.spottedleaf.moonrise.patches.chunk_system.io.MoonriseRegionFileIO] Failed to read chunk data for task: Task for world: 'minecraft:overworld' at (375,375) type: CHUNK_DATA, hash: 124749869
+[00:54:12 ERROR]: [ca.spottedleaf.moonrise.patches.chunk_system.scheduling.task.ChunkLoadTask] Failed to load chunk data for task: GenericDataLoadTask{class: ca.spottedleaf.moonrise.patches.chunk_system.scheduling.task.ChunkLoadTask$ChunkDataLoadTask, world: minecraft:overworld, chunk: (375,375), hashcode: 522480927, priority: BLOCKING, type: CHUNK_DATA}, chunk data will be lost
+-- ChunkGuard verdicts/errors --
+[00:54:15 INFO]: [STDOUT] [io.github.kuohsuanlo.chunkguard.ChunkGuardRuntime] [ChunkGuard] BLOCKED corrupting write [moonrise] (kept good disk data) chunk(375,375) incoming=structure_starts disk=exists(failsafe)
+-- ChunkGuard counters (all) --

@@ -1,0 +1,200 @@
+[ChunkGuard] ChunkGuardAgent —— crafted by 廢土貓大 LogoCat · 廢土 · mcfallout.net
+OpenJDK 64-Bit Server VM warning: Sharing is only supported for boot loader classes because bootstrap classpath has been appended
+[ChunkGuard] appended to bootstrap classpath: <server-dir>/ChunkGuardAgent.jar
+[ChunkGuard] agent installed (transformer registered) [SHADOW mode: detect-only, never skips]
+Starting org.bukkit.craftbukkit.Main
+2026-07-14T17:09:41.146897116Z ServerMain WARN Advanced terminal features are not available in this environment
+[01:09:41 INFO]: [bootstrap] Running Java 25 (OpenJDK 64-Bit Server VM 25.0.3+9-LTS; Eclipse Adoptium Temurin-25.0.3+9) on Linux 5.15.0-139-generic (amd64)
+[01:09:41 INFO]: [bootstrap] Loading Paper 26.2-26-dev/26.2@193803d (2026-06-21T04:21:03Z) for Minecraft 26.2
+[01:09:41 INFO]: [PluginInitializerManager] Initializing plugins...
+[01:09:41 INFO]: [PluginInitializerManager] Initialized 6 plugins
+[01:09:41 INFO]: [PluginInitializerManager] Bukkit plugins (6):
+ - ChunkGuardTestKit (1.0), SturdyTether (26.2-5), SulfurScan (1.0), ViaBackwards (5.10.1-SNAPSHOT), ViaVersion (5.10.1-SNAPSHOT), WorldEdit (7.4.4-SNAPSHOT+7531-9ea49e7)
+WARNING: A terminally deprecated method in sun.misc.Unsafe has been called
+WARNING: sun.misc.Unsafe::objectFieldOffset has been called by org.joml.MemUtil$MemUtilUnsafe (file:<server-dir>/libraries/org/joml/joml/1.10.8/joml-1.10.8.jar)
+WARNING: Please consider reporting this to the maintainers of class org.joml.MemUtil$MemUtilUnsafe
+WARNING: sun.misc.Unsafe::objectFieldOffset will be removed in a future release
+[01:09:44 INFO]: Environment: Environment[sessionHost=https://sessionserver.mojang.com, servicesHost=https://api.minecraftservices.com, profilesHost=https://api.mojang.com, name=PROD]
+[01:09:45 INFO]: Loaded 1585 recipes
+[01:09:45 INFO]: Loaded 1688 advancements
+[01:09:45 INFO]: Starting minecraft server version 26.2
+[01:09:45 INFO]: Loading properties
+[01:09:45 INFO]: This server is running Paper version 26.2-26-dev/26.2@193803d (2026-06-21T04:21:03Z) (Implementing API version 26.2.build.26-alpha)
+[01:09:45 INFO]: [spark] This server bundles the spark profiler. For more information please visit https://docs.papermc.io/paper/profiling
+[01:09:45 INFO]: Server Ping Player Sample Count: 12
+[01:09:45 INFO]: Using 4 threads for Netty based IO
+[01:09:45 INFO]: [MoonriseCommon] Paper is using 6 worker threads, 1 I/O threads
+[01:09:45 INFO]: Default game type: CREATIVE
+[01:09:45 INFO]: Generating keypair
+[01:09:45 INFO]: Starting Minecraft server on *:25577
+[01:09:45 INFO]: Paper: Using libdeflate (Linux x86_64) compression from Velocity.
+[01:09:45 INFO]: Paper: Using OpenSSL 1.1.x (Linux x86_64) cipher from Velocity.
+[01:09:46 INFO]: [ViaVersion] Loading server plugin ViaVersion v5.10.1-SNAPSHOT
+[01:09:46 INFO]: [ViaVersion] ViaVersion 5.10.1-SNAPSHOT is now loaded. Registering protocol transformers and injecting...
+[01:09:46 INFO]: [ViaVersion] Loading block connection mappings ...
+[01:09:46 INFO]: [ViaBackwards] Loading translations...
+[01:09:46 INFO]: [ViaBackwards] Registering protocols...
+[01:09:46 INFO]: [ChunkGuardTestKit] Loading server plugin ChunkGuardTestKit v1.0
+[01:09:46 INFO]: [SturdyTether] Loading server plugin SturdyTether v26.2-5
+[01:09:46 INFO]: [ViaBackwards] Loading server plugin ViaBackwards v5.10.1-SNAPSHOT
+[01:09:46 INFO]: [WorldEdit] Loading server plugin WorldEdit v7.4.4-SNAPSHOT+7531-9ea49e7
+[01:09:46 INFO]: Got request to register class com.sk89q.worldedit.bukkit.BukkitServerInterface with WorldEdit [com.sk89q.worldedit.extension.platform.PlatformManager@4efa637b]
+[01:09:46 INFO]: [SulfurScan] Loading server plugin SulfurScan v1.0
+[01:09:46 INFO]: Server permissions file permissions.yml is empty, ignoring it
+[01:09:46 INFO]: [WorldEdit] Enabling WorldEdit v7.4.4-SNAPSHOT+7531-9ea49e7
+[01:09:46 INFO]: Registering commands with com.sk89q.worldedit.bukkit.BukkitServerInterface
+[01:09:46 INFO]: WEPIF: Using the Bukkit Permissions API.
+[01:09:47 INFO]: Using com.sk89q.worldedit.bukkit.adapter.impl.v26_2.PaperweightAdapter as the Bukkit adapter
+[01:09:47 WARN]: **** SERVER IS RUNNING IN OFFLINE/INSECURE MODE!
+[01:09:47 WARN]: The server will make no attempt to authenticate usernames. Beware.
+[01:09:47 WARN]: While this makes the game possible to play without internet access, it also opens up the ability for hackers to connect with any username they choose.
+[01:09:47 WARN]: To change this, set "online-mode" to "true" in the server.properties file.
+[01:09:47 INFO]: Preparing level "world"
+[01:09:47 INFO]: [STDOUT] [io.github.kuohsuanlo.chunkguard.ChunkGuardTransformer] [ChunkGuard] armed: write barrier injected into RegionFileStorage
+[01:09:47 INFO]: Loading 81 persistent chunks for level 'minecraft:overworld'...
+[01:09:47 INFO]: Preparing spawn area: 10%
+[01:09:48 INFO]: Prepared spawn area in 724 ms
+[01:09:48 INFO]: Loading 0 persistent chunks for level 'minecraft:the_nether'...
+[01:09:48 INFO]: Preparing spawn area: 100%
+[01:09:48 INFO]: Prepared spawn area in 1 ms
+[01:09:48 INFO]: Loading 0 persistent chunks for level 'minecraft:the_end'...
+[01:09:48 INFO]: Prepared spawn area in 0 ms
+[01:09:48 INFO]: Done preparing level "world" (1.117s)
+[01:09:48 INFO]: [ViaVersion] Enabling ViaVersion v5.10.1-SNAPSHOT
+[01:09:48 INFO]: [ViaVersion] ViaVersion detected server version: 26.2 (776)
+[01:09:48 INFO]: [ChunkGuardTestKit] Enabling ChunkGuardTestKit v1.0
+[01:09:48 INFO]: [SturdyTether] Enabling SturdyTether v26.2-5
+[01:09:48 INFO]: [ViaBackwards] Enabling ViaBackwards v5.10.1-SNAPSHOT
+[01:09:48 INFO]: [SulfurScan] Enabling SulfurScan v1.0
+[01:09:48 INFO]: [SulfurScan] SulfurScan enabled
+[01:09:48 INFO]: [spark] Starting background profiler...
+[01:09:48 INFO]: Starting remote control listener
+[01:09:48 INFO]: Thread RCON Listener started
+[01:09:48 INFO]: RCON running on 0.0.0.0:25585
+[01:09:48 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[01:09:48 WARN]: Saving oversized chunk [-1, -1] (1661707 bytes} to external file ./world/dimensions/minecraft/overworld/region/c.-1.-1.mcc
+[01:09:49 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[01:09:49 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[01:09:49 INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[01:09:49 INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[01:09:49 INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[01:09:49 INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[01:09:49 INFO]: Running delayed init tasks
+[01:09:49 INFO]: Done (8.198s)! For help, type "help"
+[01:09:49 INFO]: [ViaVersion] Finished mapping loading, shutting down loader executor.
+[01:09:49 INFO]: *** Currently you are 34 builds behind ***
+[01:09:49 INFO]: *** It is highly recommended to download the latest build from https://papermc.io/downloads/paper ***
+[01:09:49 WARN]: [ViaVersion] There is a newer plugin version available: 5.11.0, you're on: 5.10.1-SNAPSHOT
+[01:09:49 INFO]: Thread RCON Client /127.0.0.1 started
+[01:09:49 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] heap free~=40MB (target 40MB); forcing reload of (375,375) ...
+[01:09:49 WARN]: Nag author(s): '[]' of 'ChunkGuardTestKit v1.0' about their usage of System.out/err.print. Please use your plugin's logger instead (JavaPlugin#getLogger).
+[01:09:51 ERROR]: Caught previously unhandled exception :
+[01:09:51 ERROR]: RCON Listener #1
+java.lang.OutOfMemoryError: Java heap space
+	at net.minecraft.server.rcon.thread.RconThread.closeSocket(RconThread.java:116) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.server.rcon.thread.RconThread.run(RconThread.java:53) ~[paper-26.2.jar:26.2-26-193803d]
+	at java.base/java.lang.Thread.runWith(Thread.java:1487) ~[?:?]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[?:?]
+[01:09:51 ERROR]: [ca.spottedleaf.moonrise.patches.chunk_system.io.MoonriseRegionFileIO] Failed to read chunk data for task: Task for world: 'minecraft:overworld' at (375,375) type: CHUNK_DATA, hash: 2086210666
+java.lang.OutOfMemoryError: Java heap space
+	at java.base/java.util.Arrays.copyOfRange(Arrays.java:3849) ~[?:?]
+	at java.base/java.lang.String.<init>(String.java:616) ~[?:?]
+	at java.base/java.lang.String.<init>(String.java:546) ~[?:?]
+	at java.base/java.io.DataInputStream.readUTF(DataInputStream.java:604) ~[?:?]
+	at java.base/java.io.DataInputStream.readUTF(DataInputStream.java:555) ~[?:?]
+	at net.minecraft.nbt.CompoundTag$1.readString(CompoundTag.java:130) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.loadCompound(CompoundTag.java:58) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:46) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:40) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.loadList(ListTag.java:44) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.load(ListTag.java:25) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.load(ListTag.java:19) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag.readNamedTagData(CompoundTag.java:434) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.loadCompound(CompoundTag.java:59) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:46) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:40) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag.readNamedTagData(CompoundTag.java:434) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.loadCompound(CompoundTag.java:59) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:46) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:40) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.loadList(ListTag.java:44) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.load(ListTag.java:25) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.load(ListTag.java:19) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag.readNamedTagData(CompoundTag.java:434) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.loadCompound(CompoundTag.java:59) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:46) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.load(CompoundTag.java:40) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.loadList(ListTag.java:44) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.load(ListTag.java:25) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.ListTag$1.load(ListTag.java:19) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag.readNamedTagData(CompoundTag.java:434) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.nbt.CompoundTag$1.loadCompound(CompoundTag.java:59) ~[paper-26.2.jar:26.2-26-193803d]
+2026-07-14T17:09:51.845878547Z Log4j2-AsyncAppenderEventDispatcher-1-Async ERROR An exception occurred processing Appender TerminalConsole
+org.apache.logging.log4j.core.appender.AppenderLoggingException: java.lang.OutOfMemoryError: Java heap space
+	at org.apache.logging.log4j.core.config.AppenderControl.tryCallAppender(AppenderControl.java:164)
+	at org.apache.logging.log4j.core.config.AppenderControl.callAppender0(AppenderControl.java:133)
+	at org.apache.logging.log4j.core.config.AppenderControl.callAppenderPreventRecursion(AppenderControl.java:124)
+	at org.apache.logging.log4j.core.config.AppenderControl.callAppender(AppenderControl.java:88)
+	at org.apache.logging.log4j.core.appender.AsyncAppenderEventDispatcher.dispatch(AsyncAppenderEventDispatcher.java:178)
+	at org.apache.logging.log4j.core.appender.AsyncAppenderEventDispatcher.dispatchAll(AsyncAppenderEventDispatcher.java:117)
+	at org.apache.logging.log4j.core.appender.AsyncAppenderEventDispatcher.run(AsyncAppenderEventDispatcher.java:92)
+Caused by: java.lang.OutOfMemoryError: Java heap space
+
+[01:09:53 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] heap recovered: free~=880MB
+[01:09:53 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] holder chunk class=ProtoChunk persistedStatus=minecraft:structure_starts isUnsaved(before)=true
+[01:09:53 INFO]: [ChunkGuardTestKit] [STDOUT] [cgtest] marked unsaved; isUnsaved(after)=true -> now stop the server
+[01:09:53 INFO]: Thread RCON Client /127.0.0.1 shutting down
+[01:09:56 INFO]: [STDOUT] [io.github.kuohsuanlo.chunkguard.ChunkGuardRuntime] [ChunkGuard] SHADOW would-skip corrupting write [moonrise] chunk(375,375) incoming=structure_starts disk=exists(failsafe)
+[01:09:56 ERROR]: Negative index in crash report handler (0/8)
+[01:09:56 ERROR]: Encountered an unexpected exception
+net.minecraft.ReportedException: Exception ticking world
+	at net.minecraft.server.MinecraftServer.tickChildren(MinecraftServer.java:1851) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.server.MinecraftServer.tickServer(MinecraftServer.java:1644) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.server.dedicated.DedicatedServer.tickServer(DedicatedServer.java:404) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.server.MinecraftServer.processPacketsAndTick(MinecraftServer.java:1702) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.server.MinecraftServer.runServer(MinecraftServer.java:1372) ~[paper-26.2.jar:26.2-26-193803d]
+	at net.minecraft.server.MinecraftServer.lambda$spin$0(MinecraftServer.java:302) ~[paper-26.2.jar:26.2-26-193803d]
+	at java.base/java.lang.Thread.run(Thread.java:1474) ~[?:?]
+Caused by: java.lang.OutOfMemoryError: Java heap space
+[01:09:56 ERROR]: This crash report has been saved to: <server-dir>/crash-reports/crash-2026-07-15_01.09.56-server.txt
+[01:09:56 INFO]: Stopping server
+[01:09:56 INFO]: [SulfurScan] Disabling SulfurScan v1.0
+[01:09:56 INFO]: [WorldEdit] Disabling WorldEdit v7.4.4-SNAPSHOT+7531-9ea49e7
+[01:09:56 INFO]: Unregistering com.sk89q.worldedit.bukkit.BukkitServerInterface from WorldEdit
+[01:09:56 INFO]: [ViaBackwards] Disabling ViaBackwards v5.10.1-SNAPSHOT
+[01:09:56 INFO]: [SturdyTether] Disabling SturdyTether v26.2-5
+[01:09:56 INFO]: [ChunkGuardTestKit] Disabling ChunkGuardTestKit v1.0
+[01:09:56 INFO]: [ViaVersion] Disabling ViaVersion v5.10.1-SNAPSHOT
+[01:09:56 INFO]: [ViaVersion] ViaVersion has been disabled; uninjected the platform and shut down the scheduler.
+[01:09:56 INFO]: Saving players
+[01:09:56 INFO]: Saving worlds
+[01:09:56 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:overworld
+[01:09:56 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:overworld'
+[01:09:56 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:overworld'
+[01:09:56 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'minecraft:overworld'
+[01:09:56 WARN]: Saving oversized chunk [-1, -1] (1661707 bytes} to external file ./world/dimensions/minecraft/overworld/region/c.-1.-1.mcc
+[01:09:56 INFO]: [ChunkHolderManager] Saved 1 block chunks, 0 entity chunks, 0 poi chunks in world 'minecraft:overworld' in 0.40s
+[01:09:56 INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'minecraft:overworld'
+[01:09:56 INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'minecraft:overworld'
+[01:09:56 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_nether
+[01:09:56 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:the_nether'
+[01:09:56 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:the_nether'
+[01:09:56 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'minecraft:the_nether'
+[01:09:56 INFO]: [ChunkHolderManager] Saved 0 block chunks, 0 entity chunks, 0 poi chunks in world 'minecraft:the_nether' in 0.00s
+[01:09:56 INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'minecraft:the_nether'
+[01:09:56 INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'minecraft:the_nether'
+[01:09:56 INFO]: Saving chunks for level 'ServerLevel[world]'/minecraft:the_end
+[01:09:57 INFO]: [ChunkHolderManager] Waiting 60s for chunk system to halt for world 'minecraft:the_end'
+[01:09:57 INFO]: [ChunkHolderManager] Halted chunk system for world 'minecraft:the_end'
+[01:09:57 INFO]: [ChunkHolderManager] Saving all chunkholders for world 'minecraft:the_end'
+[01:09:57 INFO]: [ChunkHolderManager] Saved 0 block chunks, 0 entity chunks, 0 poi chunks in world 'minecraft:the_end' in 0.00s
+[01:09:57 INFO]: [ChunkHolderManager] Waiting 60s for chunk I/O to halt for world 'minecraft:the_end'
+[01:09:57 INFO]: [ChunkHolderManager] Halted I/O scheduler for world 'minecraft:the_end'
+[01:09:57 INFO]: ThreadedAnvilChunkStorage (world): All chunks are saved
+[01:09:57 INFO]: ThreadedAnvilChunkStorage (DIM-1): All chunks are saved
+[01:09:57 INFO]: ThreadedAnvilChunkStorage (DIM1): All chunks are saved
+[01:09:57 INFO]: ThreadedAnvilChunkStorage: All dimensions are saved
+[01:09:57 INFO]: Waiting for all RegionFile I/O tasks to complete...
+[01:09:57 INFO]: All RegionFile I/O tasks to complete
+[01:09:57 INFO]: [MoonriseCommon] Awaiting termination of worker pool for up to 60s...
+[01:09:57 INFO]: [MoonriseCommon] Awaiting termination of I/O pool for up to 60s...

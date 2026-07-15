@@ -1,0 +1,32 @@
+[00:49:08] building ChunkGuardTestKit.jar
+[00:49:08] plugin built.
+[00:49:08] rebuilding ChunkGuardAgent from source (mvn)
+[00:49:10] agent rebuilt md5=b02b4cfa
+[00:49:10] reusing existing heavy-chunk baseline
+[00:49:58] baseline chunk(375,375): status=minecraft:full block_entities=1144 sections=25 payload_md5=8984b154135e (mcc=yes)
+[00:49:58] === tune headroom until 'chunk data will be lost' reproduces (with diagnostics) ===
+[00:53:58] try hr=40 -> mode=real hr=40 lost=1 blocked=1 would=0 cstatus=minecraft:full cbe=1144 csec=25 cmatch=yes cg[]
+[00:53:58] REPRODUCED at hr=40
+[00:57:58] guard-check: mode=real hr=40 lost=1 blocked=1 would=0 cstatus=minecraft:full cbe=1144 csec=25 cmatch=yes cg[]
+[00:57:58] === VALIDATION x4 (lost>=1 AND blocked>=1 AND md5match=yes AND status=full) ===
+[01:00:28] validate #1: mode=real hr=40 lost=1 blocked=1 would=0 cstatus=minecraft:full cbe=1144 csec=25 cmatch=yes cg[]
+[01:00:28]   #1 PASS (1/4)
+[01:04:26] validate #2: mode=real hr=40 lost=1 blocked=1 would=0 cstatus=minecraft:full cbe=1144 csec=25 cmatch=yes cg[]
+[01:04:26]   #2 PASS (2/4)
+[01:08:27] validate #3: mode=real hr=40 lost=1 blocked=1 would=0 cstatus=minecraft:full cbe=1144 csec=25 cmatch=yes cg[]
+[01:08:27]   #3 PASS (3/4)
+[01:09:38] validate #4: mode=real hr=40 lost=1 blocked=1 would=0 cstatus=minecraft:full cbe=1144 csec=25 cmatch=yes cg[]
+[01:09:38]   #4 PASS (4/4)
+[01:09:38] === shadow control (guard OFF): the corrupting write SHOULD land -> chunk clobbered ===
+[01:10:35] shadow: mode=shadow hr=40 lost=0 blocked=0 would=1 cstatus=minecraft:structure_starts cbe=0 csec=24 cmatch=NO cg[]
+[01:10:35]   shadow OK: without the guard the chunk WAS corrupted (proves the threat is real)
+[01:10:35] === FINAL content verification: real run (guard ON), then inspect the surviving on-disk chunk ===
+[01:14:34] final on-disk chunk(375,375): status=minecraft:full block_entities=1144 sections=25 payload_md5=8984b154135e
+[01:14:34] baseline was:                 status=minecraft:full block_entities=1144 sections=25 payload_md5=8984b154135e
+[01:14:34]   ✅ CONTENT PRESERVED: surviving chunk is BYTE-IDENTICAL to baseline (all 1144 block_entities intact)
+[01:14:34] --- deep dump: block-entity id histogram + total items, baseline vs final ---
+BASELINE: status=minecraft:full block_entities=1144 total_items=17160 top_ids={'minecraft:chest': 1144}
+FINAL   : status=minecraft:full block_entities=1144 total_items=17160 top_ids={'minecraft:chest': 1144}
+[01:15:35] restored baseline
+[01:15:35] === SUMMARY: reproduced=yes hr=40 validations_passed=4/4 content_preserved=yes ===
+DONE

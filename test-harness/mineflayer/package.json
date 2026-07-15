@@ -1,0 +1,7 @@
+{
+  "name": "chunkguard-testkit-heavychunk",
+  "version": "1.0.0",
+  "description": "Bot that stacks a WorldEdit schematic into one chunk to build a heavy target chunk for ChunkGuardAgent validation.",
+  "private": true,
+  "dependencies": { "mineflayer": "^4.20.0" }
+}

@@ -1,0 +1,6 @@
+evidence/
+.baseline/
+.run.lock
+plugin/out/
+mineflayer/node_modules/
+*.jar

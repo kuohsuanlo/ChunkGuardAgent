@@ -1,0 +1,13 @@
+target/
+*.class
+*.jar
+!dist/*.jar
+.idea/
+*.iml
+dependency-reduced-pom.xml
+# test-harness local artifacts (raw logs, heavy-chunk baseline, build output)
+test-harness/evidence/
+test-harness/.baseline/
+test-harness/plugin/out/
+test-harness/mineflayer/node_modules/
+test-harness/.run.lock
