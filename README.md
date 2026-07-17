@@ -7,7 +7,7 @@ chunk」的真毀損。判斷用**內容來歷(chunk status)不是檔案大小**
 *crafted by 廢土貓大 LogoCat · 廢土 · mcfallout.net*
 
 - 目標:Paper / Folia,MC 26.2(1.21.11);設計上最大程度不綁版本(見〔跨版本〕)
-- 下載:[`dist/ChunkGuardAgent-26.2-1.jar`](dist/ChunkGuardAgent-26.2-1.jar)(預編譯;checksum 與驗證報告裡的 jar 一致,版本說明見 [`RELEASES.md`](RELEASES.md))
+- 下載:[`dist/ChunkGuardAgent-26.2-3.jar`](dist/ChunkGuardAgent-26.2-3.jar)(預編譯;版本說明與 checksum 見 [`RELEASES.md`](RELEASES.md))
 - 安裝:`-javaagent:ChunkGuardAgent.jar`,重啟生效
 - 實測:一台大型外掛環境的 Paper 26.2 測試伺服器—— 檢視 10,073 次真實存檔、**0 誤殺**(skipped=0)、0 反射錯誤、1,988 次非-full chunk 正確放行
 
@@ -93,17 +93,17 @@ else                          → ALLOW               // 硬碟也非-full = 正
 ① **試跑但不影響區塊**(shadow 模式:只記錄、不攔截,伺服器行為與沒裝時 100% 相同,建議先跑幾天):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-1.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-3.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
 ```
 
 ② **真的阻擋區塊毀損**(正式啟用):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-1.jar -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-3.jar -jar paper-26.2.jar nogui
 ```
 
 - `-Xms4G -Xmx4G` 換成你原本的記憶體設定;jar 檔名對應 [`dist/`](dist/) 下載的檔案。
-- 已經有自己的啟動腳本?只要在 `java` 後面插入 `-javaagent:ChunkGuardAgent-26.2-1.jar` 這一段(試跑再多加 `-Dchunkguard.shadow=true`),其他參數全部照舊。
+- 已經有自己的啟動腳本?只要在 `java` 後面插入 `-javaagent:ChunkGuardAgent-26.2-3.jar` 這一段(試跑再多加 `-Dchunkguard.shadow=true`),其他參數全部照舊。
 - 試跑判讀:log 出現 `SHADOW would-skip` = 它抓到一次毀損寫入(正式模式下會被擋);關機時 `inspectErrors=0`、平常存檔無異狀 → 可安心轉正式。
 
 **進階微調(通常不用動):**
@@ -114,6 +114,8 @@ java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-1.jar -jar paper-26.2.jar nog
 | `chunkguard.shadow` | `false` | **只偵測不 skip** —— 印出「本來會擋」但仍放行。上線初期先跑幾天確認 0 誤殺 |
 | `chunkguard.verbose` | `false` | 背景執行緒每 60 秒印計數 |
 | `chunkguard.lowHeapMB` | `192` | 估計 free heap 低於此值(MB)時,跳過會 OOM 的 `readDisk` 解壓,改走零解壓的 header-only existence check → fail-**safe** |
+| `chunkguard.inhabitedGuard` | `true` | **里程(InhabitedTime)倒退檢查**(26.2-2 新增):擋「載入失敗後被倖存伺服器重生成的假 full」蓋掉有人住過的真 chunk。**只有**裝了會合法歸零里程的外掛(整格重生成類:海島/礦區/資源世界重置;難度重置類)才需要設 `false`,詳見 [`docs/INHABITED-TIME.md`](docs/INHABITED-TIME.md) |
+| `chunkguard.readGuard` | `true` | **讀取防線**(26.2-3 新增):載入時發現「status 停在半成品、卻帶著里程」的貼錯標籤屍體(合法半成品里程恆為 0),內容完整就把 Status 治癒回 full 再交給遊戲——阻止 worldgen 從壞掉的 step 續跑把殘存資料滅掉;內容不完整只大聲告警(counter `readGuardAlerts`) |
 
 後台署名:開機 banner + `chunkguard.author` system property + 一條帶署名的休眠 daemon thread(spark/thread dump 看得到)。
 
@@ -121,7 +123,8 @@ java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-1.jar -jar paper-26.2.jar nog
 
 `inspected`(看過的存檔)/ `skipped`(擋下的毀損寫入)/ `shadowWouldSkip`(shadow 模式本來會擋)/
 `allowedNewOrEmpty`(非-full 但硬碟也空 → 放行的新 chunk)/ `lowHeapFailsafe`(低記憶體時走 header-only
-existence check 擋下的)/ `inspectErrors`(反射失敗 → fail-open)。
+existence check 擋下的)/ `fakeFullBlocked`(里程倒退檢查擋下的假 full)/ `readGuardHealed`(讀取時
+治癒的貼錯標籤屍體)/ `readGuardAlerts`(讀取時發現但治不了的屍體,只告警)/ `inspectErrors`(反射失敗 → fail-open)。
 關機時印一次總結。
 
 ### 驗證(Paper 26.2)—— 見 [`docs/VALIDATION.md`](docs/VALIDATION.md) 完整報告(中英×白話/技術/AI)
@@ -149,18 +152,38 @@ headroom 40MB **確定性重現** `chunk data will be lost`(OOM during load → 
 harness、自帶 Anvil 讀取器);它會重現 `chunk data will be lost` 並比較 agent 開/關的區塊下場。詳見
 [`test-harness/README.md`](test-harness/README.md) 與 [`docs/VALIDATION.md`](docs/VALIDATION.md)。
 
-### 已知邊界與蓄意不做的設計
+### 假 full 與里程防護(26.2-2 起內建,預設開啟)
 
-status 鐵則有一個已知邊界:讀取失敗的空白半成品若在**伺服器沒死、玩家在場**的少見組合下被
-worldgen 重新生成推到 `full`,這個「假 full」(一片重生成的新原野)存檔時會被快速通道放行、
-蓋掉硬碟上的真資料——status 層面兩者無法區分。
+status 鐵則有一個已知邊界:讀取失敗的空白半成品若在**伺服器沒死、玩家在場**的組合下被
+worldgen 重新生成推到 `full`,這個「假 full」(一片重生成的新原野)會被快速通道放行、蓋掉
+硬碟上的真資料——status 層面兩者無法區分。我們最初蓄意不擋它(以為此組合罕見),**但正式
+環境兩週內出現 4 例真實受害者**(受害格 live 里程 51 秒 vs 備份 229 小時之類)——伺服器的
+OOM 存活能力越好,假 full 越常見。26.2-2 起補上第二條單調性規則:
 
-封這個洞的設計我們已完整推演——比對 `InhabitedTime`(「里程表」:玩家待在該格附近就累加、
-永遠只加不減、跟著 chunk 資料走;真城堡幾百萬 ticks vs 假原野趨近 0,一眼拆穿)——**但蓄意
-保留不做**:它的誤擋面正好落在生態圈的合法工具上(整格重生成類外掛、難度控制類外掛、線上
-trim 工具的快取殘留窗),配套的旁路與白名單會把「掛上就忘」變成「掛上要讀文件」。實際觀測的
-毀損案例全是「伺服器幾秒內死亡」型態,status 鐵則已覆蓋。完整設計、衝突面盤點與決策理由見
-[`docs/INHABITED-TIME.md`](docs/INHABITED-TIME.md);若你的環境正好是高風險組合,歡迎開 issue。
+> **`InhabitedTime`(里程)只增不減、跟著資料走**。一個里程趨近零的 full 要蓋掉里程累積數
+> 小時的 full → 重生成冒充者 → 擋。門檻刻意保守:硬碟里程 ≥ 20 分鐘、且 ≥ 來者的 50 倍、
+> 且來者 < 1 小時,三者同時成立才攔;荒野(兩邊都近零)與正常遊玩永遠不會觸發。
+
+代價與例外:此檢查只對「里程 < 1 小時的 full 存檔」多讀一次硬碟基準,且基準用 **64KB 視窗
+串流掃描**讀取(不建 NBT 樹、記憶體有界,怪物 chunk 與外部 `.mcc` 都讀得動,低記憶體時自動跳過);
+若你裝了會**合法歸零里程**的外掛(海島/礦區/資源世界的整格重生成、難度重置類),它們的重置
+會被擋下(log 有明確說明),請設 `-Dchunkguard.inhabitedGuard=false` 關閉本檢查(status 鐵則
+不受影響)。完整設計史、衝突面盤點與正式站案例見 [`docs/INHABITED-TIME.md`](docs/INHABITED-TIME.md)。
+
+### 讀取防線(26.2-3 起內建,預設開啟)
+
+寫入端守「壞東西不准進硬碟」,但**已經躺在硬碟上的地雷**(agent 部署前的舊傷、檔案位元腐蝕)
+它管不到——這些地雷的引爆方式是「讀取」:遊戲讀到 status 停在半成品的 chunk,以為還沒生成完,
+**從那一步繼續生成**,把殘存的真資料蓋掉。讀取防線在引爆前拆彈:
+
+> 里程只有「活著的 full chunk」會累積(源碼實證:`ServerChunkCache` tick 迴圈),合法半成品
+> 里程**恆為 0**。所以「status=半成品、里程>0」= 曾經是 full 的屍體,零誤判空間。載入時發現
+> 這種屍體且**內容完整**(sections 健全)→ 把 Status 治癒回 `full` 再交給遊戲,資料當場生還;
+> 內容不完整(真被清空的空殼)→ 治不了,大聲告警留給備份還原。任何不確定 → 照原版走。
+
+實測(Paper 26.2):把 9,000 萬 ticks 里程的 1144 箱怪物 chunk 標籤改壞成 `biomes` — 防線開:
+`READ-GUARD HEALED ... biomes → full`,1144 箱完整生還、存檔後硬碟恢復 full;防線關(對照):
+原版從 biomes 續跑生成、載入卡死,屍體無法使用。兩輪其他 chunk 載入零誤報。
 
 ---
 
@@ -184,8 +207,15 @@ mechanism:
   hook_fallback: RegionFileStorage#write(Lnet/minecraft/world/level/ChunkPos;Lnet/minecraft/nbt/CompoundTag;)V
   disk_compare: RegionFileStorage#read(ChunkPos) 反射呼叫(同 IO 執行緒 synchronized,安全)
   provenance_hook_deferred: MoonriseRegionFileIO#finishRead / ChunkLoadTask 標記 poisoned 座標(v2,best-effort)
-  inhabitedtime_rule_deferred: 比對 InhabitedTime 單調性可攔「重生成假 full」;蓄意不做——誤擋面
-    與整格重生成/難度控制類外掛重疊,違反零設定原則;完整設計見 docs/INHABITED-TIME.md
+  inhabitedtime_rule: 26.2-2 已實作(-Dchunkguard.inhabitedGuard 預設 true)。SKIP iff incoming=full
+    AND incoming.IT<72000 AND disk=full AND disk.IT>=max(24000, incoming.IT*50)。低記憶體跳過(fail-open)。
+    disk 基準用 64KB 串流位元組掃描(不建 NBT 樹,怪物 chunk/.mcc 可讀)。正式站實證 4 例假 full
+    (s16×3/s73×1)後由「蓄意不做」反轉;衝突面(整格重生成/難度重置外掛)設 false 停用;歷程見
+    docs/INHABITED-TIME.md
+  read_guard: 26.2-3 已實作(-Dchunkguard.readGuard 預設 true)。hook=SerializableChunkData.parse 入口。
+    HEAL iff status∈proto AND InhabitedTime>=1200(合法半成品恆為0,源碼:僅 ticking full chunk 累積)
+    AND sections>=8(內容完整) → putString Status=minecraft:full(解析前原地治癒);內容不完整→只告警
+    readGuardAlerts。shadow 模式只記錄。防的是「已在硬碟上的舊地雷被 worldgen 從壞 step 續跑滅資料」
 
 decision_iron_rule:
   # chunk status 只前進不倒退;full 永不合法退回 proto → 零誤殺
@@ -206,8 +236,8 @@ cross_version:
   - Moonrise 類名(ca.spottedleaf.*)是 1.21 世代(前身 io.papermc.paper.chunk.system.*)→ 只當主 hook,
     找不到就退 vanilla write;主判斷(內容+disk-compare)不依賴 Moonrise 內部
 
-config: chunkguard.enabled(true) / chunkguard.shadow(false, detect-only) / chunkguard.verbose(false) / chunkguard.lowHeapMB(192, low-heap failsafe 門檻)
-counters: inspected / skipped / shadowWouldSkip / allowedNewOrEmpty / lowHeapFailsafe / inspectErrors
+config: chunkguard.enabled(true) / chunkguard.shadow(false, detect-only) / chunkguard.verbose(false) / chunkguard.lowHeapMB(192, low-heap failsafe 門檻) / chunkguard.inhabitedGuard(true, 里程倒退擋假 full) / chunkguard.readGuard(true, 讀取治癒貼錯標籤屍體)
+counters: inspected / skipped / shadowWouldSkip / allowedNewOrEmpty / lowHeapFailsafe / fakeFullBlocked / readGuardHealed / readGuardAlerts / inspectErrors
 
 related:
   - 架構骨架:ASM relocated + bootstrap classloader + 署名 daemon thread

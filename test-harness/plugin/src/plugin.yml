@@ -13,3 +13,12 @@ commands:
   reloadchunk:
     description: force a fresh chunk load under a fixed heap headroom (validation only)
     usage: /reloadchunk <cx> <cz> [headroomMB] [world]
+  holdchunk:
+    description: hold an async full-level plugin chunk ticket (player-like driver for fake-full repro)
+    usage: /holdchunk <cx> <cz> [world]
+  releasechunk:
+    description: release the plugin chunk ticket
+    usage: /releasechunk <cx> <cz> [world]
+  setmileage:
+    description: overwrite a loaded chunk InhabitedTime and mark unsaved (fake-full state factory)
+    usage: /setmileage <cx> <cz> <ticks> [world]

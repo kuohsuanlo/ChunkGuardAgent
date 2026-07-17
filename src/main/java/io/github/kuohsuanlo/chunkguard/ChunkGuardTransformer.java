@@ -33,6 +33,7 @@ import org.objectweb.asm.Opcodes;
 public final class ChunkGuardTransformer implements ClassFileTransformer {
 
     static final String STORAGE = "net/minecraft/world/level/chunk/storage/RegionFileStorage";
+    static final String CHUNK_DATA = "net/minecraft/world/level/chunk/storage/SerializableChunkData";
     static final String RUNTIME = "io/github/kuohsuanlo/chunkguard/ChunkGuardRuntime";
 
     static final String FINISH_WRITE = "moonrise$finishWrite";
@@ -45,7 +46,7 @@ public final class ChunkGuardTransformer implements ClassFileTransformer {
 
     /** used by AgentMain.retransformIfLoaded */
     static boolean isTarget(String internalName) {
-        return STORAGE.equals(internalName);
+        return STORAGE.equals(internalName) || CHUNK_DATA.equals(internalName);
     }
 
     private static boolean isFinishWrite(String name, String desc) {
@@ -60,7 +61,13 @@ public final class ChunkGuardTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-        if (className == null || !STORAGE.equals(className) || !ChunkGuardRuntime.enabled()) {
+        if (className == null || !ChunkGuardRuntime.enabled()) {
+            return null;
+        }
+        if (CHUNK_DATA.equals(className)) {
+            return transformChunkData(classfileBuffer);
+        }
+        if (!STORAGE.equals(className)) {
             return null;
         }
         try {
@@ -97,6 +104,90 @@ public final class ChunkGuardTransformer implements ClassFileTransformer {
             t.printStackTrace();
             return null;
         }
+    }
+
+    /**
+     * READ GUARD (26.2-3): injects {@code ChunkGuardRuntime.onChunkNbtRead(tag)} at the entry of
+     * {@code SerializableChunkData.parse(LevelHeightAccessor, PalettedContainerFactory, CompoundTag)}
+     * — the common parse chokepoint for every chunk loaded from disk (moonrise + vanilla paths both
+     * funnel here). The runtime may HEAL a mislabeled ex-full chunk (proto status carrying mileage)
+     * by rewriting its Status to full in-place, BEFORE the game decides to regenerate over it.
+     * Matched tolerantly: static method named "parse" whose descriptor contains a CompoundTag param;
+     * the tag's local slot is computed from the descriptor. Nothing matched → not armed, no error.
+     */
+    private static byte[] transformChunkData(byte[] classfileBuffer) {
+        try {
+            ClassReader cr = new ClassReader(classfileBuffer);
+            ClassWriter cw = new ClassWriter(cr, ClassWriter.COMPUTE_MAXS);
+            boolean[] patched = {false};
+            ClassVisitor cv = new ClassVisitor(Opcodes.ASM9, cw) {
+                @Override
+                public MethodVisitor visitMethod(int access, String name, String desc,
+                                                 String sig, String[] exceptions) {
+                    MethodVisitor mv = super.visitMethod(access, name, desc, sig, exceptions);
+                    if ((access & Opcodes.ACC_STATIC) != 0 && "parse".equals(name)
+                            && desc.contains("Lnet/minecraft/nbt/CompoundTag;")) {
+                        int slot = tagSlot(desc);
+                        if (slot >= 0) {
+                            patched[0] = true;
+                            final int tagVar = slot;
+                            return new MethodVisitor(Opcodes.ASM9, mv) {
+                                @Override
+                                public void visitCode() {
+                                    super.visitCode();
+                                    super.visitVarInsn(Opcodes.ALOAD, tagVar);
+                                    super.visitMethodInsn(Opcodes.INVOKESTATIC, RUNTIME,
+                                            "onChunkNbtRead", "(Ljava/lang/Object;)V", false);
+                                }
+                            };
+                        }
+                    }
+                    return mv;
+                }
+            };
+            cr.accept(cv, 0);
+            if (!patched[0]) {
+                System.err.println("[ChunkGuard] SerializableChunkData found but no parse(CompoundTag)"
+                        + " matched — read guard NOT armed (write barrier unaffected). Version drift?");
+                return null;
+            }
+            System.out.println("[ChunkGuard] armed: read guard injected into SerializableChunkData.parse");
+            return cw.toByteArray();
+        } catch (Throwable t) {
+            System.err.println("[ChunkGuard] read-guard transform failed — leaving SerializableChunkData vanilla: " + t);
+            t.printStackTrace();
+            return null;
+        }
+    }
+
+    /** Local-variable slot of the first CompoundTag param in a STATIC method descriptor; -1 if none. */
+    private static int tagSlot(String desc) {
+        int slot = 0;
+        int i = 1; // skip '('
+        while (i < desc.length() && desc.charAt(i) != ')') {
+            char c = desc.charAt(i);
+            if (c == 'L') {
+                int end = desc.indexOf(';', i);
+                String ref = desc.substring(i, end + 1);
+                if ("Lnet/minecraft/nbt/CompoundTag;".equals(ref)) {
+                    return slot;
+                }
+                slot += 1;
+                i = end + 1;
+            } else if (c == 'J' || c == 'D') {
+                slot += 2;
+                i++;
+            } else if (c == '[') {
+                i++; // array marker: type char follows; treat whole array as 1 slot
+                while (i < desc.length() && desc.charAt(i) == '[') i++;
+                if (desc.charAt(i) == 'L') i = desc.indexOf(';', i) + 1; else i++;
+                slot += 1;
+            } else {
+                slot += 1;
+                i++;
+            }
+        }
+        return -1;
     }
 
     /** Inserts {@code if (ChunkGuardRuntime.shouldSkip*(…)) return;} at the method entry. */

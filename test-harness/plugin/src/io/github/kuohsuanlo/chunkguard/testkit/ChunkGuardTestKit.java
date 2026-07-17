@@ -56,6 +56,58 @@ public final class ChunkGuardTestKit extends JavaPlugin {
                 return true;
             }
         }
+        // setmileage: overwrite a LOADED chunk's InhabitedTime and mark it unsaved — deterministically
+        // manufactures the defining state of a fake-full impostor (near-zero mileage in memory, big
+        // mileage on disk) without needing an OOM. Load the chunk first (holdchunk).
+        if (name.equals("setmileage")) {
+            if (a.length < 3) { getLogger().info("usage: /setmileage <cx> <cz> <ticks> [world]"); return true; }
+            try {
+                int cx = Integer.parseInt(a[0]), cz = Integer.parseInt(a[1]);
+                long ticks = Long.parseLong(a[2]);
+                World w = Bukkit.getWorld(a.length > 3 ? a[3] : "world");
+                Object level = w.getClass().getMethod("getHandle").invoke(w);
+                Object cache = level.getClass().getMethod("getChunkSource").invoke(level);
+                Class<?> csC = Class.forName("net.minecraft.world.level.chunk.status.ChunkStatus");
+                Object full = csC.getField("FULL").get(null);
+                Method get = cache.getClass().getMethod("getChunk", int.class, int.class, csC, boolean.class);
+                Object chunk = get.invoke(cache, cx, cz, full, true); // already loaded → returns instantly
+                chunk.getClass().getMethod("setInhabitedTime", long.class).invoke(chunk, ticks);
+                Method mark = findMethod(chunk.getClass(), "markUnsaved", 0);
+                if (mark != null) { mark.setAccessible(true); mark.invoke(chunk); }
+                else setBoolField(chunk, "unsaved", true);
+                System.out.println("[testkit] setmileage (" + cx + "," + cz + ") -> " + ticks + " marked unsaved");
+            } catch (Throwable t) {
+                getLogger().warning("setmileage failed: " + t);
+                t.printStackTrace();
+            }
+            return true;
+        }
+        // holdchunk/releasechunk: player-like ASYNC full-chunk driver — keeps a load-failed proto's
+        // holder demanded at full so worldgen REGENERATES it (the fake-full reproduction).
+        // Do NOT use /forceload or a bare addPluginChunkTicket for this: both load synchronously and
+        // park the main thread, which stalls the generation pipeline itself (observed: Chunk wait
+        // watchdog spam, generationTask=null). getChunkAtAsync leaves the main thread free — the
+        // same shape as a real player ticket; the plugin ticket is added only after load completes.
+        if (name.equals("holdchunk") || name.equals("releasechunk")) {
+            if (a.length < 2) { getLogger().info("usage: /" + name + " <cx> <cz> [world]"); return true; }
+            final int cx = Integer.parseInt(a[0]), cz = Integer.parseInt(a[1]);
+            final World w = Bukkit.getWorld(a.length > 2 ? a[2] : "world");
+            if (w == null) { getLogger().warning("no world"); return true; }
+            if (name.equals("releasechunk")) {
+                boolean ok = w.removePluginChunkTicket(cx, cz, this);
+                System.out.println("[testkit] releasechunk (" + cx + "," + cz + ") -> " + ok);
+                return true;
+            }
+            System.out.println("[testkit] holdchunk async request (" + cx + "," + cz + ") ...");
+            w.getChunkAtAsync(cx, cz, true).thenAccept(c -> {
+                w.addPluginChunkTicket(cx, cz, this);
+                System.out.println("[testkit] holdchunk (" + cx + "," + cz + ") loaded+ticketed, chunk=" + c);
+            }).exceptionally(t -> {
+                System.out.println("[testkit] holdchunk (" + cx + "," + cz + ") async failed: " + t);
+                return null;
+            });
+            return true;
+        }
         // heapfill
         int seconds = a.length > 0 ? parse(a[0], 30) : 30;
         int threads = a.length > 1 ? parse(a[1], 8) : 8;
