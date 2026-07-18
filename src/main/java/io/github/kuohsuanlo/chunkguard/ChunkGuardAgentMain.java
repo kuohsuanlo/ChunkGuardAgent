@@ -34,6 +34,7 @@ public final class ChunkGuardAgentMain {
     public static void premain(String args, Instrumentation inst) {
         signature();
         bootstrap(inst);
+        preloadOwnClasses();
         install(inst);
         ChunkGuardRuntime.maybeStartVerboseLogger();
         Runtime.getRuntime().addShutdownHook(new Thread(
@@ -44,9 +45,23 @@ public final class ChunkGuardAgentMain {
     public static void agentmain(String args, Instrumentation inst) {
         signature();
         bootstrap(inst);
+        preloadOwnClasses();
         install(inst);
         ChunkGuardRuntime.maybeStartVerboseLogger();
-        retransformIfLoaded(inst);
+        retransformIfLoaded(inst); // dynamic attach only: VM already up, retransform is safe here
+    }
+
+    /** 26.2-4: force-initialize every agent class BEFORE the transformer registers, so no agent
+     *  class ever loads THROUGH the transformer (the ClassCircularityError surface — s21 case). */
+    private static void preloadOwnClasses() {
+        try {
+            Class.forName("io.github.kuohsuanlo.chunkguard.ChunkGuardRuntime", true, null);
+            Class.forName("io.github.kuohsuanlo.chunkguard.NbtReflect", true, null);
+            ChunkGuardRuntime.enabled();
+            ChunkGuardRuntime.shadow();
+        } catch (Throwable t) {
+            System.err.println("[ChunkGuard] preload warning (continuing): " + t);
+        }
     }
 
     /**

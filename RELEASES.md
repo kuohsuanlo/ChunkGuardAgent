@@ -7,19 +7,18 @@ Prebuilt agent jars live in [`dist/`](dist/) — download and use, no build requ
 
 | | |
 |---|---|
-| **版本 Version** | `26.2-3` |
-| **檔案 File** | [`dist/ChunkGuardAgent-26.2-3.jar`](dist/ChunkGuardAgent-26.2-3.jar) |
-| **MD5** | `0aca6dc163cff7b1ef80e3b288cd4c34` |
-| **SHA-256** | `56fa09174d40aa8f7dff02c1a66f3e1626732e31dc7f7dd3110dd0f7af569cae` |
+| **版本 Version** | `26.2-4` |
+| **檔案 File** | [`dist/ChunkGuardAgent-26.2-4.jar`](dist/ChunkGuardAgent-26.2-4.jar) |
+| **MD5** | `24c347e7571d10c6a2a8fc54ae1baae0` |
+| **SHA-256** | `a9e00fb6a91c301552512bf339d42c280da2e37015a7950efd84b31548ed3445` |
 | **驗證對象 Validated on** | Paper 26.2 (JDK 25) |
 | **Bytecode target** | Java 21（純 JDK + relocated ASM，零 NMS 編譯依賴 / pure JDK + relocated ASM, no compile-time NMS dependency） |
-| **發布日期 Date** | 2026-07-17 |
+| **發布日期 Date** | 2026-07-18 |
 
-（歷史版本保留於 dist/：26.2-2 MD5 `7552d3a7319463989d8a65b036e0bb6e`、26.2-1 MD5 `b02b4cfae60c22cf2e91656b42f9813f`。）
+（歷史版本保留於 dist/：26.2-3 `0aca6dc163cff7b1ef80e3b288cd4c34`、26.2-2 `7552d3a7319463989d8a65b036e0bb6e`、26.2-1 `b02b4cfae60c22cf2e91656b42f9813f`。）
 
-> **出處鏈 provenance**:26.2-1(`md5=b02b4cfa`)是 [`RESULTS.txt`](docs/chunkguard-validation-logs/RESULTS.txt)
-> 記錄的 4/4 保全驗證原顆二進位檔;26.2-2 增加里程防護、26.2-3 增加讀取防線,status 鐵則與
-> failsafe 路徑程式碼未變,各自通過獨立實測(見 Changelog)。
+> **出處鏈 provenance**:26.2-1(`md5=b02b4cfa`)是 4/4 保全驗證原顆;後續版本疊加里程防護(-2)、
+> 讀取防線(-3)、開機上膛加固(-4),status 鐵則與 failsafe 路徑核心未變,各自獨立實測(見 Changelog)。
 
 ## 安裝 / Install
 
@@ -27,17 +26,17 @@ Prebuilt agent jars live in [`dist/`](dist/) — download and use, no build requ
 **Trial run, zero impact** (shadow mode: detect-only, recommended for the first days):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-3.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
 ```
 
 **真的阻擋區塊毀損**（正式啟用）/ **Actually block chunk corruption** (production):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-3.jar -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -jar paper-26.2.jar nogui
 ```
 
 `-Xms4G -Xmx4G` 換成你原本的記憶體設定；已有啟動腳本的話，只要在 `java` 後面插入
-`-javaagent:ChunkGuardAgent-26.2-3.jar`，其他參數照舊。重啟生效。
+`-javaagent:ChunkGuardAgent-26.2-4.jar`，其他參數照舊。重啟生效。
 Swap the heap flags for your own; with an existing start script, just insert the
 `-javaagent:` part after `java` and keep everything else. Restart to arm.
 
@@ -53,6 +52,16 @@ Swap the heap flags for your own; with an existing start script, just insert the
 完整說明見 [`README.md`](README.md)。
 
 ## 版本紀錄 / Changelog
+
+### 26.2-4 — 2026-07-18
+
+**開機上膛加固 arming hardening**（修正正式站觀測到的靜默失效）：
+
+- 根因:transformer 的 `transform()` 對「每一個」載入的類都會被呼叫,26.2-3 把 `ChunkGuardRuntime.enabled()` 檢查放在類名比對之前——於是在 Runtime 自身(或與其初始化交錯的類)載入期間觸發 `ClassCircularityError`,例外落在 try 之外被 JVM 吞掉、`RegionFileStorage` 保持 vanilla = **寫入屏障靜默沒掛上**(s21 2026-07-17 案:重啟後 write barrier 未 arm,讀取防線正常)。
+- 修法:①`transform()` 類名檢查移到最前面,非目標類零接觸 `ChunkGuardRuntime`;②premain 先 `preloadOwnClasses()` 強制初始化全部自家類,確保沒有 agent 類會「透過 transformer」載入;③`isTarget()` 改 public(跨 app/bootstrap classloader 存取,package-private 會拋 `IllegalAccessError`——動態 attach 既有隱藏地雷,一併修)。
+- 實測:連續 5 次冷開機,每次「寫入屏障 + 讀取防線」雙雙 armed、零 `ClassCircularityError`、伺服器正常啟動(5/5)。
+- 純啟動路徑加固;判定邏輯(status 鐵則 / 里程防護 / 讀取治癒)與計數器一字未動。
+
 
 ### 26.2-3 — 2026-07-17
 

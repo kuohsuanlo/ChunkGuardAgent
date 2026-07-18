@@ -44,8 +44,10 @@ public final class ChunkGuardTransformer implements ClassFileTransformer {
     static final String D_MOONRISE = "(Ljava/lang/Object;IILjava/lang/Object;)Z";
     static final String D_VANILLA = "(Ljava/lang/Object;Ljava/lang/Object;Ljava/lang/Object;)Z";
 
-    /** used by AgentMain.retransformIfLoaded */
-    static boolean isTarget(String internalName) {
+    /** used by AgentMain.retransformIfLoaded — PUBLIC on purpose: after appendToBootstrapClassLoaderSearch
+     *  this class loads from the bootstrap loader while ChunkGuardAgentMain stays on the app loader;
+     *  a package-private access across that loader boundary throws IllegalAccessError (would kill premain). */
+    public static boolean isTarget(String internalName) {
         return STORAGE.equals(internalName) || CHUNK_DATA.equals(internalName);
     }
 
@@ -61,14 +63,18 @@ public final class ChunkGuardTransformer implements ClassFileTransformer {
     @Override
     public byte[] transform(ClassLoader loader, String className, Class<?> classBeingRedefined,
                             ProtectionDomain protectionDomain, byte[] classfileBuffer) {
-        if (className == null || !ChunkGuardRuntime.enabled()) {
+        // ★類名檢查必須在最前面、且在碰任何 ChunkGuardRuntime 符號之前(26.2-4 修正):transform()
+        // 會被「每一個」類載入呼叫,包含本 agent 自己的類——若先呼叫 ChunkGuardRuntime.enabled(),
+        // 在 Runtime 自身(或與其初始化交錯的類)載入期間會觸發 ClassCircularityError,例外落在
+        // try 之外被吞、RegionFileStorage 保持 vanilla = 寫入屏障靜默失效(s21 2026-07-17 實案)。
+        if (className == null || (!STORAGE.equals(className) && !CHUNK_DATA.equals(className))) {
+            return null;
+        }
+        if (!ChunkGuardRuntime.enabled()) {
             return null;
         }
         if (CHUNK_DATA.equals(className)) {
             return transformChunkData(classfileBuffer);
-        }
-        if (!STORAGE.equals(className)) {
-            return null;
         }
         try {
             ClassReader cr = new ClassReader(classfileBuffer);

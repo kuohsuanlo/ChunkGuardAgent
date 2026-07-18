@@ -6,7 +6,7 @@
 
     <groupId>io.github.kuohsuanlo</groupId>
     <artifactId>ChunkGuardAgent</artifactId>
-    <version>26.2-3</version>
+    <version>26.2-4</version>
     <packaging>jar</packaging>
     <name>ChunkGuardAgent</name>
     <description>Refuse to save a load-failed blank chunk over good disk data — a Java agent chunk-corruption write barrier for Paper</description>

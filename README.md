@@ -7,7 +7,7 @@ chunk」的真毀損。判斷用**內容來歷(chunk status)不是檔案大小**
 *crafted by 廢土貓大 LogoCat · 廢土 · mcfallout.net*
 
 - 目標:Paper / Folia,MC 26.2(1.21.11);設計上最大程度不綁版本(見〔跨版本〕)
-- 下載:[`dist/ChunkGuardAgent-26.2-3.jar`](dist/ChunkGuardAgent-26.2-3.jar)(預編譯;版本說明與 checksum 見 [`RELEASES.md`](RELEASES.md))
+- 下載:[`dist/ChunkGuardAgent-26.2-4.jar`](dist/ChunkGuardAgent-26.2-4.jar)(預編譯;版本說明與 checksum 見 [`RELEASES.md`](RELEASES.md))
 - 安裝:`-javaagent:ChunkGuardAgent.jar`,重啟生效
 - 實測:一台大型外掛環境的 Paper 26.2 測試伺服器—— 檢視 10,073 次真實存檔、**0 誤殺**(skipped=0)、0 反射錯誤、1,988 次非-full chunk 正確放行
 
@@ -93,17 +93,17 @@ else                          → ALLOW               // 硬碟也非-full = 正
 ① **試跑但不影響區塊**(shadow 模式:只記錄、不攔截,伺服器行為與沒裝時 100% 相同,建議先跑幾天):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-3.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
 ```
 
 ② **真的阻擋區塊毀損**(正式啟用):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-3.jar -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -jar paper-26.2.jar nogui
 ```
 
 - `-Xms4G -Xmx4G` 換成你原本的記憶體設定;jar 檔名對應 [`dist/`](dist/) 下載的檔案。
-- 已經有自己的啟動腳本?只要在 `java` 後面插入 `-javaagent:ChunkGuardAgent-26.2-3.jar` 這一段(試跑再多加 `-Dchunkguard.shadow=true`),其他參數全部照舊。
+- 已經有自己的啟動腳本?只要在 `java` 後面插入 `-javaagent:ChunkGuardAgent-26.2-4.jar` 這一段(試跑再多加 `-Dchunkguard.shadow=true`),其他參數全部照舊。
 - 試跑判讀:log 出現 `SHADOW would-skip` = 它抓到一次毀損寫入(正式模式下會被擋);關機時 `inspectErrors=0`、平常存檔無異狀 → 可安心轉正式。
 
 **進階微調(通常不用動):**
