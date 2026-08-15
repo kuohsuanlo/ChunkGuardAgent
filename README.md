@@ -7,7 +7,7 @@ chunk」的真毀損。判斷用**內容來歷(chunk status)不是檔案大小**
 *crafted by 廢土貓大 LogoCat · 廢土 · mcfallout.net*
 
 - 目標:Paper / Folia,MC 26.2(1.21.11);設計上最大程度不綁版本(見〔跨版本〕)
-- 下載:[`dist/ChunkGuardAgent-26.2-4.jar`](dist/ChunkGuardAgent-26.2-4.jar)(預編譯;版本說明與 checksum 見 [`RELEASES.md`](RELEASES.md))
+- 下載:[`dist/ChunkGuardAgent-26.2-5.jar`](dist/ChunkGuardAgent-26.2-5.jar)(預編譯;版本說明與 checksum 見 [`RELEASES.md`](RELEASES.md))
 - 安裝:`-javaagent:ChunkGuardAgent.jar`,重啟生效
 - 實測:一台大型外掛環境的 Paper 26.2 測試伺服器—— 檢視 10,073 次真實存檔、**0 誤殺**(skipped=0)、0 反射錯誤、1,988 次非-full chunk 正確放行
 
@@ -45,7 +45,15 @@ Minecraft 的 chunk 狀態只會**前進**(empty → … → full),永遠不會�
 
 > **只有當「要寫入的是非-full」而「硬碟上現存的是 full」時,才 SKIP。**
 
-full 不可能合法地退回 empty,所以這條規則**永遠不會誤殺**一次正常存檔 —— 實測 10,073 次存檔,誤殺 0 次。
+full 不可能合法地退回 empty,所以這條規則**不會誤殺一次正常的 terrain chunk 存檔** —— 實測 10,073 次
+存檔,誤殺 0 次。
+
+> ⚠️ **但「零誤殺」曾經只對 terrain chunk 成立,26.2-4 以前有一個嚴重缺陷**:`RegionFileStorage`
+> 這個攔截點**同時被實體(entities)與 POI 儲存共用**(`EntityStorage → SimpleRegionStorage →
+> RegionFileStorage`),而實體/POI 的根標籤**本來就沒有 `Status` 欄位**。舊版 `statusOf()` 在讀不到
+> Status 時回傳空字串而非 null,於是每一筆實體/POI 存檔都被當成「非-full 的 terrain chunk」,
+> 在低記憶體時被丟棄。正式環境代價:13 台分流命中、單台最高 1,598 次,且**全機隊 100% 的攔截
+> 都是這個誤判**。**26.2-5 已修**(見 [RELEASES.md](RELEASES.md) 與下方〔已修缺陷〕),請務必升級。
 
 ---
 
@@ -93,17 +101,17 @@ else                          → ALLOW               // 硬碟也非-full = 正
 ① **試跑但不影響區塊**(shadow 模式:只記錄、不攔截,伺服器行為與沒裝時 100% 相同,建議先跑幾天):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-5.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
 ```
 
 ② **真的阻擋區塊毀損**(正式啟用):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-5.jar -jar paper-26.2.jar nogui
 ```
 
 - `-Xms4G -Xmx4G` 換成你原本的記憶體設定;jar 檔名對應 [`dist/`](dist/) 下載的檔案。
-- 已經有自己的啟動腳本?只要在 `java` 後面插入 `-javaagent:ChunkGuardAgent-26.2-4.jar` 這一段(試跑再多加 `-Dchunkguard.shadow=true`),其他參數全部照舊。
+- 已經有自己的啟動腳本?只要在 `java` 後面插入 `-javaagent:ChunkGuardAgent-26.2-5.jar` 這一段(試跑再多加 `-Dchunkguard.shadow=true`),其他參數全部照舊。
 - 試跑判讀:log 出現 `SHADOW would-skip` = 它抓到一次毀損寫入(正式模式下會被擋);關機時 `inspectErrors=0`、平常存檔無異狀 → 可安心轉正式。
 
 **進階微調(通常不用動):**
@@ -123,7 +131,8 @@ java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -jar paper-26.2.jar nog
 
 `inspected`(看過的存檔)/ `skipped`(擋下的毀損寫入)/ `shadowWouldSkip`(shadow 模式本來會擋)/
 `allowedNewOrEmpty`(非-full 但硬碟也空 → 放行的新 chunk)/ `lowHeapFailsafe`(低記憶體時走 header-only
-existence check 擋下的)/ `fakeFullBlocked`(里程倒退檢查擋下的假 full)/ `readGuardHealed`(讀取時
+existence check 擋下的)/ `fakeFullBlocked`(里程倒退檢查擋下的假 full)/ **`nonTerrainAllowed`**(沒有 Status
+的寫入=實體/POI 儲存,正確放行不介入 —— 26.2-5 新增,這個數字持續增加代表修復生效)/ `readGuardHealed`(讀取時
 治癒的貼錯標籤屍體)/ `readGuardAlerts`(讀取時發現但治不了的屍體,只告警)/ `inspectErrors`(反射失敗 → fail-open)。
 關機時印一次總結。
 
@@ -237,7 +246,7 @@ cross_version:
     找不到就退 vanilla write;主判斷(內容+disk-compare)不依賴 Moonrise 內部
 
 config: chunkguard.enabled(true) / chunkguard.shadow(false, detect-only) / chunkguard.verbose(false) / chunkguard.lowHeapMB(192, low-heap failsafe 門檻) / chunkguard.inhabitedGuard(true, 里程倒退擋假 full) / chunkguard.readGuard(true, 讀取治癒貼錯標籤屍體)
-counters: inspected / skipped / shadowWouldSkip / allowedNewOrEmpty / lowHeapFailsafe / fakeFullBlocked / readGuardHealed / readGuardAlerts / inspectErrors
+counters: inspected / skipped / shadowWouldSkip / allowedNewOrEmpty / lowHeapFailsafe / fakeFullBlocked / nonTerrainAllowed / readGuardHealed / readGuardAlerts / inspectErrors
 
 related:
   - 架構骨架:ASM relocated + bootstrap classloader + 署名 daemon thread

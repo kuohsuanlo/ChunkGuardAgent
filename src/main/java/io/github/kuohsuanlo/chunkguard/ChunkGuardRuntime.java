@@ -52,6 +52,8 @@ public final class ChunkGuardRuntime {
     public static final AtomicLong lowHeapFailsafe = new AtomicLong();
     /** SKIPs decided via the InhabitedTime mileage-regression check (regenerated fake-full). */
     public static final AtomicLong fakeFullBlocked = new AtomicLong();
+    /** Writes that carry no Status at all (entities/POI storage, or unreadable) — never judged. */
+    public static final AtomicLong nonTerrainAllowed = new AtomicLong();
     /** READ-GUARD: mislabeled ex-full chunks healed on load (status rewritten to full). */
     public static final AtomicLong readGuardHealed = new AtomicLong();
     /** READ-GUARD: proto-with-mileage corpses detected but NOT healable (content incomplete) — alert only. */
@@ -217,7 +219,11 @@ public final class ChunkGuardRuntime {
     private static String decide(Object storage, Object incomingNbt, int x, int z) {
         String inStatus = NbtReflect.statusOf(incomingNbt);
         if (inStatus == null) {
-            return null; // couldn't read incoming status → fail open
+            // No Status field at all → this write is NOT a terrain chunk (entities/POI storage share
+            // RegionFileStorage), or the tag is unreadable. Either way the barrier has no business
+            // judging it. Counted so a live server can prove this path is healthy.
+            nonTerrainAllowed.incrementAndGet();
+            return null;
         }
         if ("full".equals(inStatus)) {
             // Fast path: a full chunk is almost always a legitimate save (incl. player-emptied).
@@ -266,17 +272,29 @@ public final class ChunkGuardRuntime {
             }
             // diskNbt == null → no data OR a read failure; disambiguate with the cheap check below.
         }
-        // Low heap OR disk read returned null: use the MEMORY-FREE existence check (region header
-        // only, no decompress). If a chunk already exists on disk but we could not confirm it is a
-        // legitimate non-full save, FAIL SAFE and skip — a non-full write landing over an existing
-        // chunk under memory pressure is exactly the corruption. Worst case for a real worldgen
-        // chunk mid-progression: it is left as-is and regenerated on next load (no data loss).
-        if (NbtReflect.diskChunkExists(storage, x, z)) {
+        // Low heap OR readDisk failed. 26.2-5: do NOT fall straight to a blind existence check —
+        // first try the BOUNDED streaming scan (64KB window, no NBT tree, cannot OOM) to learn what
+        // is actually on disk. This turns the old "file exists → skip" guess into a real comparison
+        // even under memory pressure.
+        long[] scan = NbtReflect.diskScanMileage(storage, x, z);
+        if (scan != null) {
+            if (scan[1] == 1L) { // disk is full, incoming is a proto stub → the corruption
+                lowHeapFailsafe.incrementAndGet();
+                return "chunk(" + x + "," + z + ") incoming=" + inStatus + " disk=full(scan) — kept good disk data";
+            }
+            return null; // disk is itself non-full → normal worldgen progression, allow
+        }
+        // Scan unavailable (path/format we cannot read). Existence alone cannot tell a lived-in
+        // chunk from a mid-worldgen one, so this is a GUESS — only worth making when the incoming
+        // write is a near-empty stub. A stub landing on an existing chunk is the classic 4KB-shell
+        // corruption; anything with real content is left alone (fail open).
+        int inSections = NbtReflect.sectionCount(incomingNbt);
+        if (inSections >= 0 && inSections < 4 && NbtReflect.diskChunkExists(storage, x, z)) {
             lowHeapFailsafe.incrementAndGet();
-            return "chunk(" + x + "," + z + ") incoming=" + inStatus + " disk=exists(failsafe)";
+            return "chunk(" + x + "," + z + ") incoming=" + inStatus + " disk=exists (unverified: stub-over-existing)";
         }
         allowedNewOrEmpty.incrementAndGet();
-        return null; // no chunk on disk → legitimately new/growing chunk, allow
+        return null; // nothing on disk, or incoming has real content → allow
     }
 
     /** Estimated free heap in MB (JDK-only, allocation-free) — {@code max - (total - free)}. */
@@ -302,6 +320,7 @@ public final class ChunkGuardRuntime {
                 + " allowedNewOrEmpty=" + allowedNewOrEmpty.get()
                 + " lowHeapFailsafe=" + lowHeapFailsafe.get()
                 + " fakeFullBlocked=" + fakeFullBlocked.get()
+                + " nonTerrainAllowed=" + nonTerrainAllowed.get()
                 + " readGuardHealed=" + readGuardHealed.get()
                 + " readGuardAlerts=" + readGuardAlerts.get()
                 + " inspectErrors=" + inspectErrors.get()

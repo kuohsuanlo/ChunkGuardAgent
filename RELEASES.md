@@ -7,18 +7,19 @@ Prebuilt agent jars live in [`dist/`](dist/) — download and use, no build requ
 
 | | |
 |---|---|
-| **版本 Version** | `26.2-4` |
-| **檔案 File** | [`dist/ChunkGuardAgent-26.2-4.jar`](dist/ChunkGuardAgent-26.2-4.jar) |
-| **MD5** | `24c347e7571d10c6a2a8fc54ae1baae0` |
-| **SHA-256** | `a9e00fb6a91c301552512bf339d42c280da2e37015a7950efd84b31548ed3445` |
+| **版本 Version** | `26.2-5` ⚠️ **重大修復,強烈建議立即升級** |
+| **檔案 File** | [`dist/ChunkGuardAgent-26.2-5.jar`](dist/ChunkGuardAgent-26.2-5.jar) |
+| **MD5** | `7f00ae68be9d7010eef120b2ff40516c` |
+| **SHA-256** | `6655a226256078e62f815ba0055c038b8681cc4010402d91ce67dabc8b9b2d42` |
 | **驗證對象 Validated on** | Paper 26.2 (JDK 25) |
-| **Bytecode target** | Java 21（純 JDK + relocated ASM，零 NMS 編譯依賴 / pure JDK + relocated ASM, no compile-time NMS dependency） |
-| **發布日期 Date** | 2026-07-18 |
+| **Bytecode target** | Java 21（純 JDK + relocated ASM，零 NMS 編譯依賴） |
+| **發布日期 Date** | 2026-08-16 |
 
-（歷史版本保留於 dist/：26.2-3 `0aca6dc163cff7b1ef80e3b288cd4c34`、26.2-2 `7552d3a7319463989d8a65b036e0bb6e`、26.2-1 `b02b4cfae60c22cf2e91656b42f9813f`。）
+> 🔴 **26.2-4 以前的所有版本都會在低記憶體時丟棄實體/POI 存檔**（見 Changelog 26.2-5）。
+> 若你正在跑舊版，請升級；無法立即升級的止血：`-Dchunkguard.lowHeapMB=0`
+> （保留 terrain 保護、entities 放行）或 `-Dchunkguard.enabled=false`（全關）。
 
-> **出處鏈 provenance**:26.2-1(`md5=b02b4cfa`)是 4/4 保全驗證原顆;後續版本疊加里程防護(-2)、
-> 讀取防線(-3)、開機上膛加固(-4),status 鐵則與 failsafe 路徑核心未變,各自獨立實測(見 Changelog)。
+（歷史版本保留於 dist/：26.2-4 `24c347e7571d10c6a2a8fc54ae1baae0`、26.2-3 `0aca6dc163cff7b1ef80e3b288cd4c34`、26.2-2 `7552d3a7319463989d8a65b036e0bb6e`、26.2-1 `b02b4cfae60c22cf2e91656b42f9813f`。）
 
 ## 安裝 / Install
 
@@ -26,17 +27,17 @@ Prebuilt agent jars live in [`dist/`](dist/) — download and use, no build requ
 **Trial run, zero impact** (shadow mode: detect-only, recommended for the first days):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-5.jar -Dchunkguard.shadow=true -jar paper-26.2.jar nogui
 ```
 
 **真的阻擋區塊毀損**（正式啟用）/ **Actually block chunk corruption** (production):
 
 ```bash
-java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-4.jar -jar paper-26.2.jar nogui
+java -Xms4G -Xmx4G -javaagent:ChunkGuardAgent-26.2-5.jar -jar paper-26.2.jar nogui
 ```
 
 `-Xms4G -Xmx4G` 換成你原本的記憶體設定；已有啟動腳本的話，只要在 `java` 後面插入
-`-javaagent:ChunkGuardAgent-26.2-4.jar`，其他參數照舊。重啟生效。
+`-javaagent:ChunkGuardAgent-26.2-5.jar`，其他參數照舊。重啟生效。
 Swap the heap flags for your own; with an existing start script, just insert the
 `-javaagent:` part after `java` and keep everything else. Restart to arm.
 
@@ -52,6 +53,32 @@ Swap the heap flags for your own; with an existing start script, just insert the
 完整說明見 [`README.md`](README.md)。
 
 ## 版本紀錄 / Changelog
+
+### 26.2-5 — 2026-08-16 🔴 重大修復：停止丟棄實體/POI 存檔
+
+**26.2-4 以前的所有版本都有此缺陷。** 正式環境代價：13 台分流命中、單台最高 1,598 次丟棄，
+且**全機隊 100% 的攔截都是這個誤判**——那條「真的讀過磁碟、驗證過內容」的攔截路徑一次都沒觸發過。
+
+- **根因**：攔截點 `RegionFileStorage` **同時被實體與 POI 儲存共用**
+  （`EntityStorage → SimpleRegionStorage → RegionFileStorage`），而實體/POI 的根標籤**本來就沒有
+  `Status` 欄位**。`NbtReflect.statusOf()` 讀不到 Status 時回傳**空字串**而非 `null`，`decide()`
+  只在 `null` 時提早放行 ⇒ `"" != "full"` ⇒ 每筆實體/POI 存檔都被當成「非-full 的 terrain chunk」，
+  在 free heap < `lowHeapMB` 時走保險絲、只確認「檔案存在」就**丟棄整筆寫入**。
+  症狀簽名：`BLOCKED … chunk(x,z) incoming= disk=exists(failsafe)`（`incoming=` 後面是空的）。
+- **最糟的時機**：這條保險絲設計成「偶爾」觸發，但在記憶體吃緊的分流上是常態——伺服器正因為
+  存不完而窒息、最需要保住資料時，它把存檔丟了（生產實證：OOM 觸發後 3 秒、watchdog 堆疊正卡在
+  `ChunkHolderManager.autoSave → ChestBlockEntity.saveAdditional` 的卸載存檔路徑）。
+- **修法**：①`statusOf()` 找不到 Status → 回 **`null`**（= 不是 terrain chunk／讀不出來 → 屏障
+  完全不介入）②低記憶體時不再盲目「檔案存在就擋」，改用**有界串流掃描**讀出硬碟實際 status，
+  只有 `disk=full` 才攔；掃不到時僅在「incoming 確實是空殼（sections<4）」才做保守攔截，
+  讀不到 sections 一律放行 ③訊息不再對未讀取磁碟的路徑宣稱 `kept good disk data`
+  ④新增計數器 `nonTerrainAllowed`（實體/POI 正確放行數，可在 log 直接確認修復生效）。
+- **驗證**：新增離線回歸測試 [`test-harness/regression/Issue180Test.java`](test-harness/regression/)，
+  10 項全綠；同一支測試對 26.2-4 執行會在「statusOf 回 null」與「entities 零接觸硬碟」兩項失敗
+  （證明測試具鑑別力）。terrain 判定路徑（proto 仍查磁碟、高里程 full 快速放行）無回歸。
+  ⚠️ 驗證邊界：單元環境無法模擬「實際丟棄」那一步（需真 NMS ChunkPos/RegionFile），該環節由
+  正式環境 log 佐證。
+- 感謝紅隊審查交付 #155 / #180 的 bytecode 逐條 + 生產日誌互證分析。
 
 ### 26.2-4 — 2026-07-18
 

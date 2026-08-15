@@ -64,7 +64,15 @@ final class NbtReflect {
                 }
             }
             if (s == null || s.isEmpty()) {
-                return "";
+                // 26.2-5 CRITICAL FIX: absent/empty Status must be NULL, never "".
+                // RegionFileStorage is shared by terrain, ENTITIES and POI storage (EntityStorage →
+                // SimpleRegionStorage → this same class). Entity/POI root tags carry no "Status" at
+                // all, so returning "" made decide() treat every entity/POI save as a "non-full
+                // terrain chunk" and — under low heap — DISCARD it (production: 13 shards, s79 1,598
+                // drops, 100% of all fleet interceptions were this false positive, during the very
+                // death-spiral where entity data most needed saving). null = "not a terrain chunk /
+                // unreadable" → decide() fails open and never touches the write.
+                return null;
             }
             int colon = s.indexOf(':');
             return (colon >= 0 ? s.substring(colon + 1) : s).toLowerCase(Locale.ROOT);
